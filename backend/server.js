@@ -1,4 +1,4 @@
-require("dotenv").config(); // ✅ Load environment variables at the beginning
+require("dotenv").config(); // ✅ Load environment variables
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -18,13 +18,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve u
 
 // ✅ Validate Required Environment Variables
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.GEMINI_API_KEY) {
-  console.error("❌ ERROR: Missing environment variables. Check your .env file.");
+  console.error("❌ ERROR: Missing required environment variables. Check your .env file.");
   process.exit(1);
 }
 
 // ✅ MongoDB Connection
 mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
     console.error("❌ MongoDB Connection Error:", err);
@@ -41,7 +44,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`),
 });
 
-// ✅ File Upload Limit and Type Filter (e.g., only images)
+// ✅ File Upload Limit and Type Filter (only images)
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
@@ -58,7 +61,7 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profilePic: { type: String, default: "/uploads/default-avatar.png" }, // Default profile picture
+  profilePic: { type: String, default: "/uploads/default-avatar.png" },
 });
 const User = mongoose.model("User", UserSchema);
 
@@ -105,7 +108,6 @@ app.post("/signup", async (req, res) => {
 });
 
 // ✅ Login Route
-// ✅ Login Route
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ message: "Email and password are required." });
@@ -114,27 +116,23 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found." });
 
-    // Check if the password matches the hashed password stored in the database
     if (!(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ message: "Invalid credentials." });
 
-    // Generate JWT token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "2h" });
 
-    // Respond with the token and user info
     res.json({
       token,
       userId: user._id,
-      username: user.username, // Return the username
-      email: user.email, // Return the email
-      profilePic: `http://localhost:${PORT}${user.profilePic}`, // Return the profile picture URL
+      username: user.username,
+      email: user.email,
+      profilePic: `${process.env.BASE_URL || `http://localhost:${PORT}`}${user.profilePic}`,
     });
   } catch (error) {
     console.error("❌ Login error:", error);
     res.status(500).json({ message: "Server error. Please try again." });
   }
 });
-
 
 // ✅ Get User Data
 app.get("/user/:id", verifyToken, async (req, res) => {
@@ -147,7 +145,7 @@ app.get("/user/:id", verifyToken, async (req, res) => {
 
     res.json({
       ...user.toObject(),
-      profilePic: user.profilePic ? `http://localhost:${PORT}${user.profilePic}` : '/uploads/default-avatar.png',
+      profilePic: `${process.env.BASE_URL || `http://localhost:${PORT}`}${user.profilePic}`,
     });
   } catch (error) {
     console.error("❌ Fetch user error:", error);
@@ -178,7 +176,7 @@ app.put("/user/:id", verifyToken, upload.single("profilePic"), async (req, res) 
       message: "Profile updated successfully.",
       user: {
         ...updatedUser.toObject(),
-        profilePic: updatedUser.profilePic ? `http://localhost:${PORT}${updatedUser.profilePic}` : '/uploads/default-avatar.png',
+        profilePic: `${process.env.BASE_URL || `http://localhost:${PORT}`}${updatedUser.profilePic}`,
       },
     });
   } catch (error) {
@@ -187,20 +185,16 @@ app.put("/user/:id", verifyToken, upload.single("profilePic"), async (req, res) 
   }
 });
 
-// ✅ Chatbot API (Fixed error handling)
+// ✅ Chatbot API
 app.post("/chat", verifyToken, async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: "Message is required." });
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: message }] }],
-    });
-
-    const botResponse = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+    const result = await model.generateContent({ contents: [{ role: "user", parts: [{ text: message }] }] });
+    const botResponse = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm not sure how to respond.";
 
     await new Chat({ userId: req.userId, userMessage: message, botResponse }).save();
-
     res.json({ response: botResponse });
   } catch (error) {
     console.error("❌ Gemini API Error:", error);
@@ -210,4 +204,3 @@ app.post("/chat", verifyToken, async (req, res) => {
 
 // ✅ Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-// perfect

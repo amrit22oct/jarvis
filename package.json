@@ -3,23 +3,10 @@
    "version": "1.0.0",
    "private": true,
    "scripts": {
-     
-      "start": "concurrently \"npm run server\" \"npm run client\"",
-
-      
-      "client": "npm run dev --prefix frontend",
-
-      
-      "server": "node backend/server.js",
-
-      
-      "client-build": "npm run build --prefix frontend", 
-      "server-build": "node backend/server.js",  
-      "dev": "concurrently \"npm run server-dev\" \"npm run client-dev\"",
-
-     
-      "client-dev": "npm run dev --prefix frontend",  
-      "server-dev": "node backend/server.js"
+      "install": "npm install --prefix backend && npm install --prefix frontend",
+      "build": "npm run build --prefix frontend",
+      "start": "node backend/server.js",
+      "render-postbuild": "npm install --prefix frontend && npm run build --prefix frontend"
    },
    "dependencies": {
       "concurrently": "^7.6.0"
