@@ -13,7 +13,7 @@
       "server": "node backend/server.js",
 
       
-      "client-build": "npm run build --prefix frontend", 
+      "client-build": "npm run dev --prefix frontend", 
       "server-build": "node backend/server.js",  
       "dev": "concurrently \"npm run server-dev\" \"npm run client-dev\"",
 
