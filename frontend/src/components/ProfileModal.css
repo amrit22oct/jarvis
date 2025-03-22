@@ -1,0 +1,507 @@
+/* Modal Overlay */
+.profile-modal-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0, 0, 0, 0.6);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 9999;
+   opacity: 1;
+   transition: opacity 0.3s ease-in-out;
+}
+
+/* Hide overlay when modal is closed */
+.profile-modal-overlay.hidden {
+   opacity: 0;
+   pointer-events: none;
+}
+
+/* Profile Modal */
+.profile-modal {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   width: 400px;
+   text-align: center;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   transform: translateY(-10px);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Open Modal Animation */
+.profile-modal.open {
+   opacity: 1;
+   transform: translateY(0);
+}
+
+.fade-in {
+   animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+   from {
+      opacity: 0;
+      transform: scale(0.95);
+   }
+   to {
+      opacity: 1;
+      transform: scale(1);
+   }
+}
+
+/* Close Button */
+.close-profile {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   border: none;
+   background: none;
+   font-size: 20px;
+   font-weight: bold;
+   cursor: pointer;
+   color: #333;
+   transition: color 0.3s ease;
+}
+
+.close-profile:hover {
+   color: red;
+}
+
+/* Profile Picture */
+.profile-pic-container {
+   position: relative;
+   display: inline-block;
+   margin-bottom: 10px;
+}
+
+.profile-pic {
+   width: 100px;
+   height: 100px;
+   border-radius: 50%;
+   object-fit: cover;
+   border: 2px solid #ccc;
+}
+
+.no-profile-pic {
+   width: 100px;
+   height: 100px;
+   border-radius: 50%;
+   background: #4a90e2;
+   color: white;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 14px;
+   font-weight: bold;
+}
+
+.profile-pic-edit {
+   position: absolute;
+   bottom: 0;
+   right: 0;
+   background: rgba(0, 0, 0, 0.7);
+   color: white;
+   padding: 5px;
+   border-radius: 50%;
+   cursor: pointer;
+}
+
+/* Profile Details */
+.profile-details {
+   margin-top: 10px;
+}
+
+.profile-details p {
+   font-size: 16px;
+   margin: 5px 0;
+}
+
+.profile-details label {
+   display: block;
+   margin-top: 10px;
+   font-weight: bold;
+}
+
+.profile-details input {
+   width: 100%;
+   padding: 8px;
+   margin-top: 5px;
+   border: 1px solid #ccc;
+   border-radius: 5px;
+   background: white;
+   color: #333;
+}
+
+/* Profile Action Buttons */
+.profile-actions {
+   margin-top: 15px;
+}
+
+.edit-profile-btn,
+.save-profile-btn {
+   padding: 10px 20px;
+   background: #007bff;
+   color: white;
+   border: none;
+   cursor: pointer;
+   border-radius: 5px;
+   transition: background 0.3s ease-in-out;
+}
+
+.edit-profile-btn:hover,
+.save-profile-btn:hover {
+   background: #0056b3;
+}
+
+/* Image Modal */
+.image-modal-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0, 0, 0, 0.8);
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   z-index: 999;
+}
+
+.image-modal {
+   position: relative;
+   max-width: 90%;
+   max-height: 90%;
+}
+
+.image-modal img {
+   max-width: 100%;
+   max-height: 100%;
+   border-radius: 10px;
+}
+
+.close-image-modal {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   background: red;
+   color: white;
+   border: none;
+   padding: 5px 10px;
+   cursor: pointer;
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 768px) {
+   .profile-modal {
+      width: 90%;
+      padding: 15px;
+   }
+
+   .profile-pic {
+      width: 80px;
+      height: 80px;
+   }
+
+   .profile-details p,
+   .profile-details label {
+      font-size: 14px;
+   }
+
+   .profile-actions button {
+      padding: 8px 15px;
+   }
+
+   .image-modal img {
+      width: 100%;
+      height: auto;
+   }
+}
+
+/* ✅ Dark Mode */
+body.dark-mode {
+   background: #1a1a1a;
+   color: white;
+}
+
+/* Dark Mode - Profile Modal */
+body.dark-mode .profile-modal {
+   background-color: #2c2c2c;
+   color: white;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark Mode - Close Button */
+body.dark-mode .close-profile {
+   color: white;
+}
+
+body.dark-mode .close-profile:hover {
+   color: red;
+}
+
+/* Dark Mode - Profile Picture */
+body.dark-mode .profile-pic {
+   border: 2px solid #444;
+}
+
+body.dark-mode .profile-pic-edit {
+   background: rgba(255, 255, 255, 0.7);
+   color: black;
+}
+
+/* Dark Mode - Profile Inputs */
+body.dark-mode .profile-details input {
+   background: #444;
+   color: white;
+   border: 1px solid #666;
+}
+
+/* Dark Mode - Buttons */
+body.dark-mode .edit-profile-btn,
+body.dark-mode .save-profile-btn {
+   background: #007bff;
+   color: white;
+}
+
+body.dark-mode .edit-profile-btn:hover,
+body.dark-mode .save-profile-btn:hover {
+   background: #0056b3;
+}
+
+/* Dark Mode - Modal Overlay */
+body.dark-mode .profile-modal-overlay {
+   background: rgba(0, 0, 0, 0.8);
+}
+
+/* Dark Mode - Error & Loading Text */
+body.dark-mode .error-text {
+   color: red;
+}
+
+body.dark-mode .loading-text {
+   color: #007bff;
+}
+/* Profile Modal Styles */
+.profile-modal {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   width: 400px;
+   text-align: center;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   transform: translateY(-10px);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Dark Mode Profile Modal */
+body.dark-mode .profile-modal {
+   background: #1e1e1e;  /* Dark background */
+   color: #ffffff;       /* White text */
+   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+   border: 1px solid #444; /* Slight border for better visibility */
+}
+
+/* Adjust input fields for dark mode */
+body.dark-mode .profile-details input {
+   background: #333;
+   color: white;
+   border: 1px solid #555;
+}
+
+/* Ensure buttons and text contrast well in dark mode */
+body.dark-mode .edit-profile-btn,
+body.dark-mode .save-profile-btn {
+   background: #007bff;
+   color: white;
+}
+
+body.dark-mode .edit-profile-btn:hover,
+body.dark-mode .save-profile-btn:hover {
+   background: #0056b3;
+}
+
+/* Close button in dark mode */
+body.dark-mode .close-profile {
+   color: white;
+}
+/* Default (Light Mode) Styles */
+.profile-modal {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   width: 400px;
+   text-align: center;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   transform: translateY(-10px);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+   color: black; /* Ensure text is visible in light mode */
+}
+
+/* Dark Mode Styles */
+body.dark-mode .profile-modal {
+   background: black;  /* Change background to black */
+   color: white;       /* Ensure text is visible */
+   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2); /* Light shadow for visibility */
+}
+
+/* Dark Mode Input Fields */
+body.dark-mode .profile-details input {
+   background: #222; /* Dark gray background */
+   color: white;
+   border: 1px solid #555;
+}
+
+/* Ensure icons and buttons contrast properly */
+body.dark-mode .close-profile,
+body.dark-mode .edit-profile-btn,
+body.dark-mode .save-profile-btn,
+body.dark-mode .logout-btn {
+   color: white;
+}
+
+/* Profile picture container stays visible */
+body.dark-mode .profile-pic-container {
+   background: transparent;
+}
+
+/* Error and loading texts should be readable */
+body.dark-mode .error-text,
+body.dark-mode .loading-text {
+   color: red;
+}
+.profile-modal {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   width: 400px;
+   text-align: center;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   transform: translateY(-10px);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+   color: black;
+}
+
+/* Dark Mode for Profile Modal */
+.profile-modal.dark-mode {
+   background: black;
+   color: white;
+   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+.profile-modal.dark-mode .profile-details input {
+   background: #222;
+   color: white;
+   border: 1px solid #555;
+}
+
+.profile-modal.dark-mode .close-profile,
+.profile-modal.dark-mode .edit-profile-btn,
+.profile-modal.dark-mode .save-profile-btn,
+.profile-modal.dark-mode .logout-btn {
+   color: white;
+}
+
+.profile-modal.dark-mode .error-text,
+.profile-modal.dark-mode .loading-text {
+   color: red;
+}
+.profile-modal {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   width: 400px;
+   text-align: center;
+   position: relative;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   transform: translateY(-10px);
+   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+   color: black;
+}
+
+/* Dark Mode for Profile Modal */
+.profile-modal.dark-mode {
+   background: transparent !important;
+   color: white;
+   box-shadow: none;
+}
+
+.profile-modal.dark-mode .profile-details input {
+   background: #222;
+   color: white;
+   border: 1px solid #555;
+}
+
+.profile-modal.dark-mode .close-profile,
+.profile-modal.dark-mode .edit-profile-btn,
+.profile-modal.dark-mode .save-profile-btn,
+.profile-modal.dark-mode .logout-btn {
+   color: white;
+}
+
+.profile-modal.dark-mode .error-text,
+.profile-modal.dark-mode .loading-text {
+   color: red;
+}
+.profile-modal.dark-mode {
+   background: #222;
+   color: #fff;
+ }
+ 
+ .profile-modal-overlay.dark {
+   background: rgba(0, 0, 0, 0.8);
+ }
+ 
+ .profile-modal .error-text {
+   color: red;
+ }
+/* Profile Modal Light Mode */
+.profile-modal {
+   background: white;
+   color: black;
+   border-radius: 8px;
+   padding: 20px;
+   width: 350px;
+   text-align: center;
+   transition: background 0.3s, color 0.3s;
+ }
+ 
+ /* Profile Modal Dark Mode */
+ .profile-modal.dark {
+   background: #222;
+   color: white;
+ }
+ 
+ .profile-modal-overlay.dark {
+   background: rgba(0, 0, 0, 0.7);
+ }
+ 
+ /* Dark mode input fields */
+ .profile-modal.dark input {
+   background: #333;
+   color: white;
+   border: 1px solid #555;
+ }
+ 
+ /* Ensure buttons and other elements match */
+ .profile-modal.dark .profile-actions button {
+   background: #444;
+   color: white;
+   border: 1px solid #666;
+ }
+ 
+ .profile-modal.dark .close-profile {
+   color: white;
+ }
+ 
+ .profile-modal.dark .error-text {
+   color: #ff6b6b;
+ }
+  

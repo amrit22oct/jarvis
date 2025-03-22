@@ -1,0 +1,22 @@
+.app {
+   display: flex;
+   height: 100vh;
+ }
+ 
+ /* Sidebar takes 25% of the width */
+ .sidebar {
+   width: 25%;
+   background-color: #1e1e1f;
+   color: white;
+   padding: 20px;
+   box-sizing: border-box;
+   overflow-y: auto;
+ }
+ 
+ /* HomePage takes 75% of the width */
+ .homepage {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+ }
+ 

@@ -1,0 +1,188 @@
+/* Mobile View - ChatGPT-Like UI */
+@media screen and (max-width: 768px) {
+  /* Fullscreen Layout */
+  .homepage-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--background-color);
+  }
+
+  /* Sidebar as an Overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 85%;
+    max-width: 320px;
+    height: 100vh;
+    background: var(--background-color);
+    transition: left 0.3s ease-in-out;
+    z-index: 1050;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Chatbox - Fullscreen */
+  .chatbox-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--background-color);
+  }
+
+  /* Prevent shifting */
+  .with-sidebar,
+  .full-width {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* Hamburger & New Chat Button - Top Left */
+  .top-left-buttons {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 1100;
+  }
+
+  /* Chatbox Header - Fixed */
+  .chatbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    background: var(--background-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  /* Chat Messages - Scrollable */
+  .chat-messages {
+    flex: 1;
+    padding: 12px;
+    margin-top: 70px; /* Space below header */
+    margin-bottom: 60px; /* Space above input */
+    overflow-y: auto;
+    height: calc(100vh - 130px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) transparent;
+  }
+
+  /* Chatbox Footer - Fixed at Bottom */
+  .chatbox-footer {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: var(--background-color);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Input Field */
+  .chat-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+  }
+
+  /* Send Button */
+  .send-button {
+    margin-left: 10px;
+    padding: 10px 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Disable interaction when sidebar is open */
+  .sidebar.open + .chatbox-container {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+/* Mobile View - Chatbox Footer Fixed */
+@media screen and (max-width: 768px) {
+  .chatbox-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    background: var(--background-color);
+  }
+
+  /* Chat Messages Area - Scrollable */
+  .chat-messages {
+    flex: 1;
+    padding: 12px;
+    margin-top: 60px; /* Space for header */
+    margin-bottom: 60px; /* Space for footer */
+    overflow-y: auto;
+    height: calc(100vh - 120px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) transparent;
+  }
+
+  /* Chatbox Footer - Fixed */
+  .chatbox-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: var(--background-color);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  /* Input Field */
+  .chat-input {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+  }
+
+  /* Send Button */
+  .send-button {
+    margin-left: 10px;
+    padding: 10px 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Prevent chat shifting when sidebar opens */
+  .sidebar.open + .chatbox-container {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+

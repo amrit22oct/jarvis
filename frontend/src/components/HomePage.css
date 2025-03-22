@@ -1,0 +1,289 @@
+/* Homepage Layout */
+.homepage-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 5px; /* Minimal margin */
+  transition: background 0.3s ease-in-out;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  transition: width 0.3s ease-in-out;
+}
+
+.sidebar.closed {
+  width: 0;
+  overflow: hidden;
+}
+
+/* Chat Area */
+.chatbox-container {
+  width: 80%;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease-in-out;
+}
+
+/* When Sidebar is Open */
+.with-sidebar {
+  width: calc(80% - 250px); /* Chatbox adjusts when sidebar is open */
+  margin-left: 250px;
+}
+
+.full-width {
+  width: 80%;
+  margin-left: 0;
+}
+
+/* Top-left Buttons (Hamburger & New Chat) */
+.top-left-buttons {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  z-index: 1000;
+}
+
+/* Hamburger Menu */
+.hamburger-menu,
+.new-chat-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+}
+
+/* Hide Buttons when Sidebar is Open */
+.with-sidebar .top-left-buttons {
+  display: none;
+}
+
+/* Button Icons */
+.hamburger-menu svg,
+.new-chat-button svg {
+  color: var(--primary-color);
+}
+
+/* Tooltip on Hover */
+.new-chat-button:hover::after {
+  content: "New Chat";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+/* General Light Mode Styles */
+.light-mode {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.light-mode .chatbox-container,
+.light-mode .sidebar {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+/* Mobile View Adjustments */
+@media screen and (max-width: 768px) {
+  .light-mode .homepage-container {
+    background-color: #ffffff;
+  }
+
+  .light-mode .chatbox-container {
+    background-color: #fafafa;
+    border-left: none;
+  }
+
+  .light-mode .chatbox-footer {
+    background-color: #f0f0f0;
+    border-top: 1px solid #ddd;
+  }
+
+  .light-mode .chatbox-input {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+  }
+
+  .light-mode .chat-messages {
+    background-color: #ffffff;
+  }
+
+  .light-mode .hamburger-menu,
+  .light-mode .new-chat-button {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+  }
+
+  .light-mode .hamburger-menu:hover,
+  .light-mode .new-chat-button:hover {
+    background-color: #ddd;
+  }
+}
+
+/* General Dark Mode Styles */
+.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.dark-mode .chatbox-container,
+.dark-mode .sidebar {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+/* Dark Mode Mobile View Adjustments */
+@media screen and (max-width: 768px) {
+  .dark-mode .homepage-container {
+    background-color: #181818;
+  }
+
+  .dark-mode .chatbox-container {
+    background-color: #222;
+    border-left: none;
+  }
+
+  .dark-mode .chatbox-footer {
+    background-color: #2c2c2c;
+    border-top: 1px solid #444;
+  }
+
+  .dark-mode .chatbox-input {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+  }
+
+  .dark-mode .chat-messages {
+    background-color: #1c1c1c;
+  }
+
+  .dark-mode .hamburger-menu,
+  .dark-mode .new-chat-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+  }
+
+  .dark-mode .hamburger-menu:hover,
+  .dark-mode .new-chat-button:hover {
+    background-color: #444;
+  }
+}
+/* Light Mode (default) */
+.homepage-container {
+  background-color: #fff;
+  color: black;
+}
+
+/* Dark Mode Styles */
+.homepage-container.dark-mode {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.homepage-container.dark-mode .chatbox-container {
+  background-color: #333;
+}
+
+.homepage-container.dark-mode .sidebar {
+  background-color: #222;
+}
+
+.homepage-container.dark-mode .top-left-buttons button {
+  background-color: transparent;
+  color: white;
+}
+
+.homepage-container.dark-mode .dark-mode-button {
+  background-color: transparent;
+  color: white;
+}
+
+/* Buttons and other elements may need custom dark mode styles */
+/* HomePage.css */
+
+/* Add styles for the profile button container */
+.profile-icon-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+/* Profile button styles */
+.profile-btn {
+  background-color: #007bff;
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  color: white;
+  font-size: 20px;
+}
+
+.profile-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Other existing styles */
+
+/* Light/dark mode for the homepage */
+.homepage-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  background-color: #fff;
+}
+
+.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.light-mode {
+  background-color: #f8f9fa;
+  color: #000;
+}
+/* Profile Button Positioned at the Top Right */
+.profile-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+}
+
+.profile-btn:hover {
+  color: #555;
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .profile-btn {
+  color: white;
+}
+
+.dark-mode .profile-btn:hover {
+  color: #bbb;
+}
