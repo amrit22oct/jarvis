@@ -21,7 +21,7 @@ const HomePage = () => {
   // Redirect to login if no userId
   useEffect(() => {
     if (!userId) {
-      window.location.href = "login";
+      window.location.href = "/login";
     }
   }, [userId]);
 
