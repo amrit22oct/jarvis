@@ -1,4 +1,12 @@
 /* Mobile View - ChatGPT-Like UI */
+@import "@fontsource/inter"; /* Default weight */
+@import "@fontsource/inter/400.css"; /* Specific weight */
+@import "@fontsource/roboto";
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
 @media screen and (max-width: 768px) {
   /* Fullscreen Layout */
   .homepage-container {

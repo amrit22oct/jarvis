@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.5",
+    "@fontsource/roboto": "^5.2.5",
     "@google/generative-ai": "^0.24.0",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
