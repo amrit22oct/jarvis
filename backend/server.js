@@ -23,11 +23,19 @@ if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.GEMINI_
 }
 
 // ✅ Connect to NeonDB (PostgreSQL)
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required for NeonDB
+  },
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 20000, // Timeout for new connections (20s)
+  keepAlive: true, // ✅ Enable Keep-Alive
+});
 
 pool
   .connect()
-  .then(() => console.log("✅ Connected to NeonDB"))
+  .then(() => console.log("✅ Connected to NeonDB with Keep-Alive enabled"))
   .catch((err) => {
     console.error("❌ Database Connection Error:", err.message);
     process.exit(1);
