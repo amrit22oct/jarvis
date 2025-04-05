@@ -14,16 +14,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
-<<<<<<< HEAD
+
 
 app.use(cors({
   origin: "http://localhost:5173", // ✅ Explicitly allow frontend origin
   credentials: true                // ✅ Allow cookies/authorization headers
 }));
-=======
 
 
->>>>>>> 0b84502a764ac3e81489482656945dabba421896
+
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded images
 
