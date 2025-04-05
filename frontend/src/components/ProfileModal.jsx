@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { FaTimes, FaCamera, FaEdit, FaSave, FaSignOutAlt, FaArrowLeft } from "react-icons/fa";
 import { axiosInstance } from "./axios";
 import "./ProfileModal.css";
+import Avatar from "react-avatar";
+
+
 
 
 
@@ -11,14 +14,8 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState("");
   const profilePicFile = useRef(null);
+  const defaultAvatar = "https://www.gravatar.com/avatar/?d=mp";
 
-  const defaultAvatar = "/uploads/default-avatar.png";
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchUserData();
-    }
-  }, [isOpen]);
 
   const fetchUserData = useCallback(async () => {
     setError("");
@@ -52,51 +49,105 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
     }
   }, [userId]);
 
-  const profilePicUrl = useMemo(() => userData?.profilePic || defaultAvatar, [userData?.profilePic]);
+  const profilePicUrl = useMemo(() => userData?.profilePic || defaultAvatar, [userData?.profilePic]); // Always place before return
+
+useEffect(() => {
+  if (isOpen) {
+    fetchUserData();
+  }
+}, [isOpen]);
+
+  
+
+
+  // const handleSave = useCallback(async () => {
+  //   if (!userData) return;
+
+  //   const id = userId || localStorage.getItem("userId");
+  //   const token = localStorage.getItem("token");
+
+  //   if (!id || !token) {
+  //     setError("Authentication issue. Please log in again.");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     setError("");
+
+  //     const formData = new FormData();
+  //     formData.append("username", userData.username);
+  //     if (profilePicFile.current) {
+  //       formData.append("profilePic", profilePicFile.current);
+  //     }
+
+  //     const { data } = await axiosInstance.put(`/user/${id}`, formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+      
+
+  //     setUserData((prev) => ({
+  //       ...prev,
+  //       profilePic: data.user.profilePic || defaultAvatar,
+  //     }));
+
+  //     profilePicFile.current = null;
+  //     setIsEditing(false);
+  //   } catch (error) {
+  //     setError("Error updating profile. Try again.");
+  //     console.error("❌ Error updating user data:", error.response?.data || error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [userData, userId]);
 
   const handleSave = useCallback(async () => {
     if (!userData) return;
-
+  
     const id = userId || localStorage.getItem("userId");
     const token = localStorage.getItem("token");
-
+  
     if (!id || !token) {
       setError("Authentication issue. Please log in again.");
       return;
     }
-
+  
     try {
       setLoading(true);
       setError("");
-
+  
       const formData = new FormData();
       formData.append("username", userData.username);
       if (profilePicFile.current) {
         formData.append("profilePic", profilePicFile.current);
       }
-
-      const { data } = await axiosInstance.put(`/user/${id}`, formData, {
+  
+      // ✅ Save user profile (backend already sends updated profilePic URL)
+      await axiosInstance.put(`/user/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      
-
-      setUserData((prev) => ({
-        ...prev,
-        profilePic: data.user.profilePic || defaultAvatar,
-      }));
-
+  
       profilePicFile.current = null;
+  
+      // ✅ Fetch latest user data with correct full profilePic URL
+      await fetchUserData();
+  
       setIsEditing(false);
     } catch (error) {
-      setError("Error updating profile. Try again.");
-      console.error("❌ Error updating user data:", error.response?.data || error.message);
+      console.error("❌ Error updating user profile:", error.response?.data || error.message);
+      setError("Failed to update profile.");
     } finally {
       setLoading(false);
     }
-  }, [userData, userId]);
+  }, [userData, userId, fetchUserData]);
+  
+  
 
   const handleProfilePicChange = useCallback((e) => {
     const file = e.target.files[0];
@@ -104,9 +155,11 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
       profilePicFile.current = file;
       setUserData((prev) => ({ ...prev, profilePic: URL.createObjectURL(file) }));
     } else {
+      e.target.value = ""; // Reset file input
       setError("Invalid file type. Please select an image.");
     }
   }, []);
+  
 
   const handleLogout = useCallback(() => {
     localStorage.clear();
@@ -118,24 +171,42 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
   return (
     <div className={`profile-modal-overlay ${darkMode ? "dark" : ""}`}>
       <div className={`profile-modal ${darkMode ? "dark" : ""}`}>
-        <button className="close-profile" onClick={onClose}>
-          <FaTimes />
-        </button>
+      <button className="close-profile" onClick={onClose} aria-label="Close profile modal">
+  <FaTimes />
+</button>
+
         <h3>User Profile</h3>
 
         {error && <p className="error-text">{error}</p>}
 
         <div className="profile-pic-container">
-          <img src={profilePicUrl} alt="Profile" className="profile-pic fade-in" />
-          {isEditing && (
-            <>
-              <label htmlFor="profilePicInput" className="profile-pic-edit">
-                <FaCamera />
-              </label>
-              <input type="file" id="profilePicInput" accept="image/*" onChange={handleProfilePicChange} hidden />
-            </>
-          )}
-        </div>
+  {userData?.profilePic && !userData.profilePic.includes("default") ? (
+    <img src={profilePicUrl} alt="Profile" className="profile-pic fade-in" />
+  ) : (
+    <Avatar
+      name={userData?.username}
+      size="100"
+      round
+      className="profile-pic"
+    />
+  )}
+
+  {isEditing && (
+    <>
+      <label htmlFor="profilePicInput" className="profile-pic-edit" aria-label="Upload profile picture">
+        <FaCamera />
+      </label>
+      <input
+        type="file"
+        id="profilePicInput"
+        accept="image/*"
+        onChange={handleProfilePicChange}
+        hidden
+      />
+    </>
+  )}
+</div>
+
 
         <div className="profile-details">
           {isEditing ? (
