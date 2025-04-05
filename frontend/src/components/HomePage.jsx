@@ -6,7 +6,6 @@ import ProfileModal from "./ProfileModal";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./HomePage.css";
 
-
 const HomePage = () => {
   const storedUserId = localStorage.getItem("userId");
   const [userId, setUserId] = useState(storedUserId);

@@ -67,14 +67,15 @@ const ChatBox = ({ selectedChat, setSelectedChat, chats, setChats, darkMode }) =
 
         // Send the message along with the token in the request headers
         const response = await axios.post(
-          "http://localhost:5000/chat",
+          "http://localhost:5000/chat",  // <-- Correct endpoint
           { message: query },
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+              Authorization: `Bearer ${token}`,
             },
           }
         );
+        
 
         botResponse = response.data.response;
       }

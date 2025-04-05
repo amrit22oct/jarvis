@@ -1,34 +1,43 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import './auth.css'; // Importing the CSS file
+import { axiosInstance } from "./axios"; // ✅ Use custom axios instance
+import './auth.css';
 
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // Loading state
-  const [error, setError] = useState(""); // Error state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true while requesting
-    setError(""); // Reset error before new login attempt
+    setLoading(true);
+    setError("");
+
     try {
-      const { data } = await axios.post("http://localhost:5000/login", { email, password });
-      localStorage.setItem("token", data.token); // Store token in localStorage
-      localStorage.setItem("userId", data.userId); // Store userId in localStorage
-      setUser(data.userId); // Set user in global state (parent component)
-      navigate("/chat"); // Redirect to chat page
+      console.log("🔍 Sending Request:", { email, password });
+
+      const { data } = await axiosInstance.post(
+        "/login",
+        { email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.userId);
+      setUser(data.userId);
+      navigate("/chat");
     } catch (error) {
-      // Handle login errors and display them to the user
       if (error.response) {
+        console.error("❌ Login Error Response:", error.response.data);
         setError(error.response.data.message || "Login failed");
       } else {
+        console.error("❌ Network Error:", error);
         setError("Network error. Please try again.");
       }
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -54,7 +63,7 @@ const Login = ({ setUser }) => {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
-      {error && <p className="error-message">{error}</p>} {/* Display error message */}
+      {error && <p className="error-message">{error}</p>}
       <p onClick={() => navigate("/signup")}>Don't have an account? Sign up</p>
     </div>
   );

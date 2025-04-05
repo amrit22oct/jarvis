@@ -1,7 +1,7 @@
-require("dotenv").config();
+require("dotenv").config(); // ✅ Load environment variables at the beginning
 const express = require("express");
 const cors = require("cors");
-const { Pool } = require("pg"); // ✅ PostgreSQL client
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
@@ -11,44 +11,30 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
-// Serve frontend (React) build files
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
-
-
 // ✅ Middleware
-app.use(cors());
-app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Validate Environment Variables
-if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.GEMINI_API_KEY) {
-  console.error("❌ Missing environment variables. Check your .env file.");
+app.use(cors({
+  origin: "http://localhost:5173", // ✅ Explicitly allow frontend origin
+  credentials: true                // ✅ Allow cookies/authorization headers
+}));
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded images
+
+// ✅ Validate Required Environment Variables
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.GEMINI_API_KEY) {
+  console.error("❌ ERROR: Missing environment variables. Check your .env file.");
   process.exit(1);
 }
 
-// ✅ Connect to NeonDB (PostgreSQL)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // Required for NeonDB
-  },
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 20000, // Timeout for new connections (20s)
-  keepAlive: true, // ✅ Enable Keep-Alive
-});
-
-pool
-  .connect()
-  .then(() => console.log("✅ Connected to NeonDB with Keep-Alive enabled"))
+// ✅ MongoDB Connection (Fixed)
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
-    console.error("❌ Database Connection Error:", err.message);
+    console.error("❌ MongoDB Connection Error:", err.message);
     process.exit(1);
   });
+
 
 // ✅ Gemini AI Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -60,14 +46,35 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`),
 });
 
+// ✅ File Upload Limit and Type Filter (Only Images)
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) return cb(new Error("Only images allowed."));
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed."));
+    }
     cb(null, true);
   },
 });
+
+// ✅ User Schema
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  profilePic: { type: String, default: "/uploads/default-avatar.png" },
+});
+const User = mongoose.model("User", UserSchema);
+
+// ✅ Chat Schema
+const ChatSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userMessage: { type: String, required: true },
+  botResponse: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
+const Chat = mongoose.model("Chat", ChatSchema);
 
 // ✅ Middleware for JWT Verification
 const verifyToken = (req, res, next) => {
@@ -78,7 +85,7 @@ const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
     next();
-  } catch {
+  } catch (error) {
     return res.status(403).json({ message: "Invalid or expired token." });
   }
 };
@@ -89,11 +96,11 @@ app.post("/signup", async (req, res) => {
   if (!username || !email || !password) return res.status(400).json({ message: "All fields are required." });
 
   try {
-    const existingUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (existingUser.rows.length > 0) return res.status(400).json({ message: "User already exists." });
+    if (await User.findOne({ email })) return res.status(400).json({ message: "User already exists." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", [username, email, hashedPassword]);
+    const newUser = new User({ username, email, password: hashedPassword });
+    await newUser.save();
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -108,21 +115,20 @@ app.post("/login", async (req, res) => {
   if (!email || !password) return res.status(400).json({ message: "Email and password are required." });
 
   try {
-    const userQuery = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    const user = userQuery.rows[0];
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found." });
 
     if (!(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ message: "Invalid credentials." });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "2h" });
 
     res.json({
       token,
-      userId: user.id,
+      userId: user._id,
       username: user.username,
       email: user.email,
-      profilePic: `http://localhost:${PORT}${user.profile_pic || "/uploads/default-avatar.png"}`,
+      profilePic: `http://localhost:${PORT}${user.profilePic}`,
     });
   } catch (error) {
     console.error("❌ Login error:", error);
@@ -133,37 +139,48 @@ app.post("/login", async (req, res) => {
 // ✅ Get User Data
 app.get("/user/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid user ID." });
+
   try {
-    const userQuery = await pool.query("SELECT id, username, email, profile_pic FROM users WHERE id = $1", [id]);
-    const user = userQuery.rows[0];
+    const user = await User.findById(id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    res.json({ ...user, profilePic: user.profile_pic ? `http://localhost:${PORT}${user.profile_pic}` : "/uploads/default-avatar.png" });
+    res.json({
+      ...user.toObject(),
+      profilePic: user.profilePic ? `http://localhost:${PORT}${user.profilePic}` : '/uploads/default-avatar.png',
+    });
   } catch (error) {
     console.error("❌ Fetch user error:", error);
     res.status(500).json({ message: "Server error. Please try again." });
   }
 });
 
-// ✅ Update User Profile
+// ✅ Update User Profile (with Profile Pic)
 app.put("/user/:id", verifyToken, upload.single("profilePic"), async (req, res) => {
+  console.log("📂 Received file:", req.file);
+  console.log("📂 Received body:", req.body);
+
   const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid user ID." });
+
   const { username, email } = req.body;
   const profilePic = req.file ? `/uploads/${req.file.filename}` : undefined;
 
   try {
-    const updateQuery = `
-      UPDATE users SET 
-        username = COALESCE($1, username), 
-        email = COALESCE($2, email), 
-        profile_pic = COALESCE($3, profile_pic) 
-      WHERE id = $4 RETURNING *`;
-    
-    const updatedUser = await pool.query(updateQuery, [username, email, profilePic, id]);
+    const updateData = { username, email };
+    if (profilePic) updateData.profilePic = profilePic;
 
-    if (!updatedUser.rows.length) return res.status(404).json({ message: "User not found." });
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
 
-    res.json({ message: "Profile updated.", user: updatedUser.rows[0] });
+    if (!updatedUser) return res.status(404).json({ message: "User not found." });
+
+    res.json({
+      message: "Profile updated successfully.",
+      user: {
+        ...updatedUser.toObject(),
+        profilePic: updatedUser.profilePic ? `http://localhost:${PORT}${updatedUser.profilePic}` : '/uploads/default-avatar.png',
+      },
+    });
   } catch (error) {
     console.error("❌ Update user error:", error);
     res.status(500).json({ message: "Server error. Please try again." });
@@ -182,7 +199,7 @@ app.post("/chat", verifyToken, async (req, res) => {
 
     const botResponse = result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
 
-    await pool.query("INSERT INTO chats (user_id, user_message, bot_response) VALUES ($1, $2, $3)", [req.userId, message, botResponse]);
+    await new Chat({ userId: req.userId, userMessage: message, botResponse }).save();
 
     res.json({ response: botResponse });
   } catch (error) {
