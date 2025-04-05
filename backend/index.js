@@ -1,47 +1,39 @@
-require("dotenv").config();
+require("dotenv").config(); // ✅ Load environment variables at the beginning
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
-const { Pool } = require("pg");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { Sequelize } = require("sequelize");
-
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
 
-
 app.use(cors({
   origin: "http://localhost:5173", // ✅ Explicitly allow frontend origin
   credentials: true                // ✅ Allow cookies/authorization headers
 }));
-
-
-
-
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded images
 
 // ✅ Validate Required Environment Variables
-if (!process.env.POSTGRES_URI || !process.env.JWT_SECRET || !process.env.GEMINI_API_KEY) {
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.GEMINI_API_KEY) {
   console.error("❌ ERROR: Missing environment variables. Check your .env file.");
   process.exit(1);
 }
 
-// PostgreSQL connection (neon DB)
-const sequelize = new Sequelize(process.env.POSTGRES_URI, {
-  dialect: "postgres",
-  logging: false,
-});
-
-sequelize.authenticate()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
-  .catch((err) => console.error("❌ PostgreSQL Connection Error:", err.message));
+// ✅ MongoDB Connection (Fixed)
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    process.exit(1);
+  });
 
 
 // ✅ Gemini AI Setup
@@ -50,14 +42,19 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ✅ Multer Storage for Profile Picture Uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`),
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+  }
 });
+
 
 // ✅ File Upload Limit and Type Filter (Only Images)
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
       return cb(new Error("Only image files are allowed."));
@@ -67,29 +64,22 @@ const upload = multer({
 });
 
 // ✅ User Schema
-const { DataTypes } = require("sequelize");
-
-const User = sequelize.define("User", {
-  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  username: { type: DataTypes.STRING, allowNull: false, unique: true },
-  email: { type: DataTypes.STRING, allowNull: false, unique: true },
-  password: { type: DataTypes.STRING, allowNull: false },
-  profilePic: { type: DataTypes.STRING, defaultValue: "/uploads/default-avatar.png" },
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  profilePic: { type: String, default: "/uploads/default-avatar.png" },
 });
-
-sequelize.sync(); // Sync the database
+const User = mongoose.model("User", UserSchema);
 
 // ✅ Chat Schema
-const Chat = sequelize.define("Chat", {
-  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  userId: { type: DataTypes.UUID, allowNull: false },
-  userMessage: { type: DataTypes.TEXT, allowNull: false },
-  botResponse: { type: DataTypes.TEXT, allowNull: false },
-  timestamp: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+const ChatSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userMessage: { type: String, required: true },
+  botResponse: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
 });
-
-sequelize.sync(); // Sync the database
-
+const Chat = mongoose.model("Chat", ChatSchema);
 
 // ✅ Middleware for JWT Verification
 const verifyToken = (req, res, next) => {
@@ -108,29 +98,21 @@ const verifyToken = (req, res, next) => {
 // ✅ Signup Route
 app.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
-  if (!username || !email || !password) 
-    return res.status(400).json({ message: "All fields are required." });
+  if (!username || !email || !password) return res.status(400).json({ message: "All fields are required." });
 
   try {
-    console.log("🔍 Checking if user exists...");
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) return res.status(400).json({ message: "User already exists." });
+    if (await User.findOne({ email })) return res.status(400).json({ message: "User already exists." });
 
-    console.log("🔑 Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, email, password: hashedPassword });
+    await newUser.save();
 
-    console.log("📝 Creating new user...");
-    const newUser = await User.create({ username, email, password: hashedPassword });
-
-    console.log("✅ User created successfully:", newUser);
-    res.status(201).json({ message: "User registered successfully", userId: newUser.id });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("❌ Signup error:", error);
-    res.status(500).json({ message: "Server error. Please try again.", error: error.message });
+    res.status(500).json({ message: "Server error. Please try again." });
   }
 });
-
-
 
 // ✅ Login Route
 app.post("/login", async (req, res) => {
@@ -138,20 +120,22 @@ app.post("/login", async (req, res) => {
   if (!email || !password) return res.status(400).json({ message: "Email and password are required." });
 
   try {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found." });
 
     if (!(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ message: "Invalid credentials." });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "2h" });
 
     res.json({
       token,
-      userId: user.id,
+      userId: user._id,
       username: user.username,
       email: user.email,
       profilePic: `http://localhost:${PORT}${user.profilePic}`,
+
+
     });
   } catch (error) {
     console.error("❌ Login error:", error);
@@ -159,21 +143,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
 // ✅ Get User Data
 app.get("/user/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid user ID." });
 
   try {
-    const user = await User.findByPk(id, {
-      attributes: { exclude: ["password"] },
-    });
-
+    const user = await User.findById(id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found." });
 
     res.json({
-      ...user.toJSON(),
-      profilePic: user.profilePic ? `http://localhost:${PORT}${user.profilePic}` : "/uploads/default-avatar.png",
+      ...user.toObject(),
+      profilePic: user.profilePic ? `http://localhost:${PORT}${user.profilePic}` : '/uploads/default-avatar.png',
+
     });
   } catch (error) {
     console.error("❌ Fetch user error:", error);
@@ -181,31 +163,32 @@ app.get("/user/:id", verifyToken, async (req, res) => {
   }
 });
 
-
 // ✅ Update User Profile (with Profile Pic)
 app.put("/user/:id", verifyToken, upload.single("profilePic"), async (req, res) => {
   console.log("📂 Received file:", req.file);
   console.log("📂 Received body:", req.body);
 
   const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid user ID." });
+
   const { username, email } = req.body;
   const profilePic = req.file ? `/uploads/${req.file.filename}` : undefined;
 
+
   try {
-    const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    const updateData = { username, email };
+    if (profilePic) updateData.profilePic = profilePic;
 
-    user.username = username || user.username;
-    user.email = email || user.email;
-    if (profilePic) user.profilePic = profilePic;
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
 
-    await user.save();
+    if (!updatedUser) return res.status(404).json({ message: "User not found." });
 
     res.json({
       message: "Profile updated successfully.",
       user: {
-        ...user.toJSON(),
-        profilePic: user.profilePic ? `http://localhost:${PORT}${user.profilePic}` : "/uploads/default-avatar.png",
+        ...updatedUser.toObject(),
+        profilePic: updatedUser.profilePic ? `http://localhost:${PORT}${updatedUser.profilePic}` : '/uploads/default-avatar.png',
+
       },
     });
   } catch (error) {
@@ -214,8 +197,6 @@ app.put("/user/:id", verifyToken, upload.single("profilePic"), async (req, res) 
   }
 });
 
-
-// ✅ Chatbot API
 // ✅ Chatbot API
 app.post("/chat", verifyToken, async (req, res) => {
   const { message } = req.body;
@@ -237,7 +218,6 @@ app.post("/chat", verifyToken, async (req, res) => {
   }
 });
 
-
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
@@ -245,5 +225,6 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   });
 }
+
 // ✅ Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
