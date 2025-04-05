@@ -153,7 +153,7 @@ useEffect(() => {
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
       profilePicFile.current = file;
-      setUserData((prev) => ({ ...prev, profilePic: URL.createObjectURL(file) }));
+      setUserData((prev) => ({ ...prev,  profilePic: file ? URL.createObjectURL(file) : prev.profilePic, }));
     } else {
       e.target.value = ""; // Reset file input
       setError("Invalid file type. Please select an image.");
