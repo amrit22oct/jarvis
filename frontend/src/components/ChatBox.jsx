@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaPaperclip, FaRobot, FaMicrophone, FaTrash } from "react-icons/fa";
-import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ChatBox.css";
+
+import { axiosInstance } from "./axios";
 
 const ChatBox = ({ selectedChat, setSelectedChat, chats, setChats, darkMode }) => {
   const [query, setQuery] = useState("");
@@ -66,8 +67,8 @@ const ChatBox = ({ selectedChat, setSelectedChat, chats, setChats, darkMode }) =
         }
 
         // Send the message along with the token in the request headers
-        const response = await axios.post(
-          "http://localhost:5000/chat",  // <-- Correct endpoint
+        const response = await axiosInstance.post(
+          "/chat",  // <-- Correct endpoint
           { message: query },
           {
             headers: {

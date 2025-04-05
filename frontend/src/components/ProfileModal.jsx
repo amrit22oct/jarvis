@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { FaTimes, FaCamera, FaEdit, FaSave, FaSignOutAlt, FaArrowLeft } from "react-icons/fa";
-import axios from "axios";
+import { axiosInstance } from "./axios";
 import "./ProfileModal.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 
 const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -32,9 +32,11 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
 
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_BASE_URL}/user/${id}`, {
+      const { data } = await axiosInstance.get(`/user/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      
 
       setUserData({
         ...data,
@@ -73,12 +75,13 @@ const ProfileModal = ({ isOpen, onClose, userId, darkMode }) => {
         formData.append("profilePic", profilePicFile.current);
       }
 
-      const { data } = await axios.put(`${API_BASE_URL}/user/${id}`, formData, {
+      const { data } = await axiosInstance.put(`/user/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
+      
 
       setUserData((prev) => ({
         ...prev,
